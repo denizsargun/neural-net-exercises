@@ -1,14 +1,14 @@
 classdef neuralNetLayer < handle
     % define a layer of neurons
     properties
+        weightMatrix
         width
         neurons
-        input
-        output
     end
     
     methods
         function obj = neuralNetLayer(weightMatrix)
+            obj.weightMatrix = weightMatrix;
             obj.width = size(weightMatrix,2);
             for i = 1:obj.width
                 neurons(i,1) = neuron(weightMatrix(:,i));
@@ -17,12 +17,11 @@ classdef neuralNetLayer < handle
             obj.neurons = neurons;
         end
             
-        function feedforward(obj,input)
-            obj.input = input;
-            obj.output = zeros(obj.width,1);
+        function output = feedforward(obj,input)
+            numberOfSamples = size(input,2);
+            output = zeros(obj.width,numberOfSamples);
             for i = 1:obj.width
-                obj.neurons(i).feedforward(input);
-                obj.output(i) = obj.neurons(i).output;
+                output(i,:) = obj.neurons(i).feedforward(input);
             end
             
         end

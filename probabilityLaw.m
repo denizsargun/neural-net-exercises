@@ -8,10 +8,6 @@ classdef probabilityLaw < handle
         classDistribution
         c = 1;
         variance = 10;
-        numberOfSamples = 100;
-        classesRealized
-        observation
-        data
     end
     
     methods
@@ -19,14 +15,14 @@ classdef probabilityLaw < handle
             obj.classDistribution = 1/obj.numberOfClasses*ones(obj.numberOfClasses,1);
         end
         
-        function realize_classes(obj)
-            obj.classesRealized = randi(obj.numberOfClasses,obj.numberOfSamples,1)-1;
+        function realize_classes(obj,numberOfSamples)
+            obj.classesRealized = randi(obj.numberOfClasses,1,numberOfSamples)-1;
         end
         
-        function observe(obj)
-            obj.realize_classes()
-            obj.observation = sqrt(obj.variance)*randn(obj.numberOfSamples,1)+obj.classesRealized;
-            obj.data = [obj.classesRealized, obj.observation];
+        function output = sample(obj,numberOfSamples)
+            classesRealized = obj.realize_classes(numberOfSamples);
+            features = sqrt(obj.variance)*randn(1,numberOfSamples)+classesRealized;
+            output = [classesRealized; features];
         end
         
     end

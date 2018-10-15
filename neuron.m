@@ -2,9 +2,8 @@ classdef neuron < handle
     % define a neuron
     properties
         weights
-        input
-        netInput
-        output
+        parameter = [1 0];
+        gradient % gradient of cost wrt weighted total input
     end
     
     methods
@@ -12,23 +11,19 @@ classdef neuron < handle
             obj.weights = weights;
         end
             
-        function feedforward(obj,input)
-            obj.input = input;
-            obj.netInput = obj.weights'*[input; 1];
-            obj.activation()
+        function output = feedforward(obj,input)
+            numberOfSamples = size(input,2);
+            netInput = obj.weights'*[input; ones(1,numberOfSamples)];
+            output = obj.activation(netInput);
         end
         
-        function activation(obj)
+        function output = activation(obj,netInput)
             % let us use logistic activation
-            obj.output = obj.sigmoid(obj.netInput);
+            output = obj.sigmoid(netInput);
         end
-                
-    end
     
-    methods (Static)
-        function output = sigmoid(input)
-            parameter = [1 0];
-            output = sigmf(input,parameter);
+        function output = sigmoid(obj,input)
+            output = sigmf(input,obj.parameter);
         end
         
     end
