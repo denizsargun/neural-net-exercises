@@ -1,20 +1,20 @@
 classdef neuralNet < handle
     % define a neural net
     properties
-        probabilityLaw % aim to learn this dist by sampling
+        probabilityLaw % aim to learn argmax_y p(y|x) by sampling
+%         weightMatrices % cell array
         depth
-        weightMatrices % cell array
         layers
-        batchSize = 10;
+        learningRate = .01;
     end
     
     methods
         function obj = neuralNet(weightMatrices)
             obj.probabilityLaw = probabilityLaw();
+%             obj.weightMatrices = weightMatrices;
             obj.depth = length(weightMatrices);
-            obj.weightMatrices = weightMatrices;
             for i = 1:obj.depth
-                layers(i,1) = neuralNetLayer(weightMatrices{i});
+                layers(i,1) = neuralNetLayer(obj,weightMatrices{i});
             end
             
             obj.layers = layers;
@@ -42,7 +42,8 @@ classdef neuralNet < handle
             output = obj.probabilityLaw.sample(batchSize);
         end
         
-        function sgdStep(obj,batch)
+        function sgdStep(obj)
+            % batchSize = 1
             % h_j^L = output of the jth neuron of the Lth layer
             % z_j^L = weighted total input to the jth neuron of the Lth layer
             % w_{ij}^L = weight of the connection between
@@ -59,8 +60,11 @@ classdef neuralNet < handle
             % partial J wrt w_{ji}^L = delta_j^L  sigma'(z_j^L) h_i^{L-1} 
             % delta^{L+1} > delta^L eqn
             % delta_j^L = sum_i delta_i^{L+1} sigma'(z_i^{L+1}) w_{ij}^{L+1}
+            batchSize = 1;
+            batch = obj.getBatch(batchSize);
+            delta = 
             for L = obj.depth:-1:1
-                delta = obj.layers(L).sgdStep(delta,batch);
+                delta = obj.layers(L).sgdStep(delta);
             end
             
         end
