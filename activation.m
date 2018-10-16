@@ -33,7 +33,7 @@ classdef activation < handle
         end
         
         function output = diffSigmoid(obj,input)
-            output = obj.parameter(1)*sigmf(input,obj.parameter)*(1-sigmf(input,obj.parameter));
+            output = obj.parameter(1)*sigmf(input,obj.parameter).*(1-sigmf(input,obj.parameter));
         end
         
         function output = diffRecLin(obj,input)

@@ -15,8 +15,8 @@ classdef probabilityLaw < handle
             obj.classDistribution = 1/obj.numberOfClasses*ones(obj.numberOfClasses,1);
         end
         
-        function realize_classes(obj,numberOfSamples)
-            obj.classesRealized = randi(obj.numberOfClasses,1,numberOfSamples)-1;
+        function output = realize_classes(obj,numberOfSamples)
+            output = randi(obj.numberOfClasses,1,numberOfSamples)-1;
         end
         
         function output = sample(obj,numberOfSamples)
