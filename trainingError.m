@@ -9,31 +9,24 @@ classdef trainingError < handle
         function obj = trainingError(neuralNet)
             obj.neuralNet = neuralNet;
             obj.probabilityLaw = probabilityLaw();
+            obj.lossModel = lossModel();
         end
         
-        function error = onData(obj,data)
+        function error = on_data(obj,data)
             % data = [correct label; features]
             correctLabels = data(1,:);
             features = data(2:end,:);
-            [~ classEstimates] = obj.neuralNet.feedforward(features);
+            [~, ~, ~, classEstimates] = obj.neuralNet.feedforward(features);
             error = obj.lossModel.loss(correctLabels,classEstimates);
         end
         
         function error = random(obj,sampleSize)
             % data = [correct label; features]
-            data = 
-            correctLabel = data(1,:);
-            input = data(2:end,:);
-            classEstimate = obj.feedforward(input);
-            output = obj.lossFunction(classEstimate-correctLabel);
-        end
-        
-    end
-    
-    methods (Static)
-        function output = lossFunction(difference)
-            % L2 loss
-            output = norm(difference);
+            data = obj.probabilityLaw.sample(sampleSize);
+            correctLabels = data(1,:);
+            features = data(2:end,:);
+            [~, ~, ~, classEstimates] = obj.neuralNet.feedforward(features);
+            error = obj.lossModel.loss(correctLabels,classEstimates);
         end
         
     end

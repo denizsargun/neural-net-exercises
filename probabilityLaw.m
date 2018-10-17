@@ -3,26 +3,26 @@ classdef probabilityLaw < handle
     % let Y={0,1,...,m} and p_Y(y)=1/m
     % let X=R and p_{X|Y}(x|y)=N(c*y,var)(x)
     properties
-        numberOfClasses = 2;
-        classDistributionType = 'uniform';
-        classDistribution
+        numberOfLabels = 2;
+        labelDistributionType = 'uniform';
+        labelDistribution
         c = 1;
-        variance = 10;
+        variance = 1;
     end
     
     methods
         function obj = probabilityLaw()
-            obj.classDistribution = 1/obj.numberOfClasses*ones(obj.numberOfClasses,1);
+            obj.labelDistribution = 1/obj.numberOfLabels*ones(obj.numberOfLabels,1);
         end
         
-        function output = realize_classes(obj,numberOfSamples)
-            output = randi(obj.numberOfClasses,1,numberOfSamples)-1;
+        function output = realize_labels(obj,numberOfSamples)
+            output = randi(obj.numberOfLabels,1,numberOfSamples)-1;
         end
         
         function output = sample(obj,numberOfSamples)
-            classesRealized = obj.realize_classes(numberOfSamples);
-            features = sqrt(obj.variance)*randn(1,numberOfSamples)+classesRealized;
-            output = [classesRealized; features];
+            labelsRealized = obj.realize_labels(numberOfSamples);
+            features = sqrt(obj.variance)*randn(1,numberOfSamples)+labelsRealized;
+            output = [labelsRealized; features];
         end
         
     end
