@@ -17,52 +17,10 @@ for i = 1:sampleSize
 end
 
 %% version 2
-% tweaked for Matlab R2016b
-clear
-clc
 
-digitDatasetPath = fullfile(matlabroot,'toolbox','nnet','nndemos', ...
-    'nndatasets','DigitDataset');
+% Matlab R2016b does not allow to chose training on cpu as an option and
+% the lab computer does not have a supported gpu, so we omit this case
 
-imds = imageDatastore(digitDatasetPath, ...
-    'IncludeSubfolders',true,'LabelSource','foldernames');
-
-numTrainFiles = 750;
-
-[imdsTrain,imdsValidation] = splitEachLabel(imds,numTrainFiles,'randomize');
-
-% outputSize = (inputSize-filterSize)/stride+1
-layers = [
-    imageInputLayer([28 28 1])
-    
-    convolution2dLayer(3,8,'Padding',[1 3])
-    reluLayer()
-    
-    maxPooling2dLayer(2,'Stride',2)
-    
-    convolution2dLayer(3,16,'Padding',[1 7])
-    reluLayer()
-    
-    maxPooling2dLayer(2,'Stride',2)
-    
-    convolution2dLayer(3,32,'Padding',[1 15])
-    reluLayer()
-    
-    fullyConnectedLayer(10)
-    softmaxLayer()
-    classificationLayer()];
-options = trainingOptions('sgdm', ...
-    'ExecutionEnvironment','cpu', ...
-    'InitialLearnRate',0.01, ...
-    'MaxEpochs',4, ...
-    'Shuffle','once', ...
-    'Verbose',false);
-[net, info] = trainNetwork(imdsTrain,layers,options);
-YPred = classify(net,imdsValidation);
-YValidation = imdsValidation.Labels;
-accuracy = sum(YPred == YValidation)/numel(YValidation)
-
-%% version 3
 % tweaked for Matlab R2017a
 clear
 clc
@@ -80,16 +38,21 @@ numTrainFiles = 750;
 % outputSize = (inputSize-filterSize)/stride+1
 layers = [
 imageInputLayer([28 28 1])
+
 convolution2dLayer(3,8,'Padding',[1 3])
 reluLayer
 maxPooling2dLayer(2,'Stride',2)
+
 convolution2dLayer(3,16,'Padding',[1 7])
 reluLayer
 maxPooling2dLayer(2,'Stride',2)
+
 convolution2dLayer(3,32,'Padding',[1 7])
 reluLayer
+
 fullyConnectedLayer(10)
 softmaxLayer
+
 classificationLayer];
 
 options = trainingOptions('sgdm', ...
