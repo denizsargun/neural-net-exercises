@@ -52,6 +52,13 @@ classdef top_and_geo < handle
             obj.nn = train(obj.nn,feat,tar);
         end
         
+        function pick_two(obj)
+            obj.nn = init(obj.nn);
+            obj.train;
+            obj.nn = init(obj.nn);
+            obj.train;
+        end
+        
     end
     
     methods (Static)
