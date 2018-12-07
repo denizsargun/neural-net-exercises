@@ -27,8 +27,8 @@ classdef top_and_geo < handle
         function [feat, tar] = generate_data(obj,numberOfSamples)
             % function approximation task, y = 1/2*x
             d = mvnrnd(zeros(numberOfSamples,2),[1 .5; .5 1])';
-            feat = d(1,:);
-            tar = d(2,:);
+            feat = d(:,1);
+            tar = d(:,2);
         end
         
         % oracle loss
@@ -51,7 +51,7 @@ classdef top_and_geo < handle
         end
         
         % empirical loss
-        function loss = e_loss(obj,netIndex)
+        function loss = e_loss(obj)
             if netIndex == 1
                 net = obj.nn;
             elseif netIndex == 2
@@ -60,42 +60,54 @@ classdef top_and_geo < handle
             
             numberOfSamples = length(obj.data{2});
             empLoss = 1/numberOfSamples*norm(net(obj.data{1})-obj.data{2},2);
-            regLoss = sum(sum(abs(net.IW{1}))) ...
-                +sum(sum(abs(net.IW{2}))) ...
-                +sum(sum(abs(net.LW{1}))) ...
-                +sum(sum(abs(net.LW{2}))) ...
-                +sum(abs(net.b{1}))+sum(abs(net.b{2}));
+            regLoss = sum(sum(abs(obj.nn.IW{1}))) ...
+                +sum(sum(abs(obj.nn.IW{2}))) ...
+                +sum(sum(abs(obj.nn.LW{1}))) ...
+                +sum(sum(abs(obj.nn.LW{2}))) ...
+                +sum(abs(obj.nn.b{1}))+sum(abs(obj.nn.b{2}));
             loss = empLoss+obj.regPen*regLoss;
         end
         
-        function train(obj,netIndex)
+        function loss = e_loss2(obj)
+            numberOfSamples = length(obj.data{2});
+            empLoss = 1/numberOfSamples*norm(obj.nn2(obj.data{1})-obj.data{2},2);
+            regLoss = sum(sum(abs(obj.nn2.IW{1}))) ...
+                +sum(sum(abs(obj.nn2.IW{2}))) ...
+                +sum(sum(abs(obj.nn2.LW{1}))) ...
+                +sum(sum(abs(obj.nn2.LW{2}))) ...
+                +sum(abs(obj.nn2.b{1}))+sum(abs(obj.nn2.b{2}));
+            loss = empLoss+obj.regPen*regLoss;
+        end
+        
+        function train(obj)
+            [feat, tar] = generate_data(obj,1e6);
             % deeper network options
 %             options = trainingOptions('sgdm', ...
 %                 'ValidationFrequency', 1e6, ...
 %                 'MiniBatchSize',16, ...
 %                 'L2Regularization',0.001);
+            obj.nn = train(obj.nn,feat,tar);
+        end
+        
+        function train2(obj)
             [feat, tar] = generate_data(obj,1e6);
-            if netIndex == 1
-                obj.nn = train(obj.nn,feat,tar);
-            elseif netIndex == 2
-                obj.nn2 = train(obj.nn2,feat,tar);
-            end
-            
+            % deeper network options
+%             options = trainingOptions('sgdm', ...
+%                 'ValidationFrequency', 1e6, ...
+%                 'MiniBatchSize',16, ...
+%                 'L2Regularization',0.001);
+            obj.nn2 = train(obj.nn2,feat,tar);
         end
         
         function pick_two(obj)
-            1
-            obj.e_loss(1)
-            obj.o_loss(1)
-            obj.train(1);
-            obj.e_loss(1)
-            obj.o_loss(1)
-            2
-            obj.e_loss(2)
-            obj.o_loss(2)
-            obj.train(2);
-            obj.e_loss(2)
-            obj.o_loss(2)
+            obj.nn = init(obj.nn);
+            obj.nn2 = obj.nn;
+            obj.train;
+            obj.e_loss()
+            obj.o_loss()
+            obj.train2;
+            obj.e_loss2()
+            obj.o_loss2()
         end
         
     end
