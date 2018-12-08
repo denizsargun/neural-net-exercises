@@ -15,13 +15,14 @@ classdef top_and_geo < handle
             nn = feedforwardnet(obj.netSize(2:end-1));
             nn.inputs{1}.size = 1;
             nn.layers{end}.size = 1;
-            obj.nn = init(nn);
-            obj.nn2 = init(nn);
             obj.regPen = 1e-3;
             [feat, tar] = obj.generate_data(1e7);
             obj.data = {feat; tar};
             % threshold for which network satisfies e_loss < thr
             obj.thr = 1e-2;
+            nn.trainParam.goal = obj.thr;
+            obj.nn = init(nn);
+            obj.nn2 = init(nn);
         end
         
         function [feat, tar] = generate_data(obj,numberOfSamples)
