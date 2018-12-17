@@ -52,6 +52,7 @@ for i = 1:res
         net.b{2} = netParam(7);
         A.nets{dummyNetIndex} = net;
         eLoss(i,j) = A.e_loss(dummyNetIndex);
+        i,j
     end
     
 end
