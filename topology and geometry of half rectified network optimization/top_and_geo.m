@@ -15,11 +15,13 @@ classdef top_and_geo < handle
             net = feedforwardnet(obj.netSize(2:end-1));
             net.inputs{1}.size = 1;
             net.layers{end}.size = 1;
-            obj.regPen = 1e-3;
+            obj.regPen = 0.05;
             [feat, tar] = obj.generate_data(1e7);
             obj.data = {feat; tar};
             % threshold for which network satisfies e_loss < thr
-            obj.thr = 1e-2;
+            % for a normal vector with sigma_X,sigma_Y = 1, rho = .5, ...
+            % min error=sigma_Y^2(1-rho^2)=.75
+            obj.thr = .93;
             net.trainParam.goal = obj.thr;
             % show/not show training window
             net.trainParam.showWindow = false;
@@ -43,13 +45,13 @@ classdef top_and_geo < handle
             net = obj.nets{netIndex};
             numberOfSamples = 1e6;
             [feat, tar] = obj.generate_data(numberOfSamples);
-            empLoss = 1/numberOfSamples*norm(net(feat)-tar,2);
+            empLoss = 1/numberOfSamples*norm(net(feat)-tar,2)^2;
             regLoss = sum(sum(abs(net.IW{1}))) ...
                 +sum(sum(abs(net.IW{2}))) ...
                 +sum(sum(abs(net.LW{1}))) ...
                 +sum(sum(abs(net.LW{2}))) ...
                 +sum(abs(net.b{1}))+sum(abs(net.b{2}));
-            loss = empLoss+obj.regPen*regLoss;
+            loss = (1-obj.regPen)*empLoss+obj.regPen*regLoss;
         end
         
         % empirical loss
@@ -57,22 +59,22 @@ classdef top_and_geo < handle
             net = obj.nets{netIndex};
             numberOfSamples = length(obj.data{2});
             empLoss = 1/numberOfSamples ...
-                *norm(net(obj.data{1})-obj.data{2},2);
+                *norm(net(obj.data{1})-obj.data{2},2)^2;
             % L1 loss
             regLoss = sum(sum(abs(net.IW{1}))) ...
                 +sum(sum(abs(net.IW{2}))) ...
                 +sum(sum(abs(net.LW{1}))) ...
                 +sum(sum(abs(net.LW{2}))) ...
                 +sum(abs(net.b{1}))+sum(abs(net.b{2}));
-            loss = empLoss+obj.regPen*regLoss;
+            loss = (1-obj.regPen)*empLoss+obj.regPen*regLoss;
         end
         
         function train(obj,netIndex)
             % deeper network options
-%             options = trainingOptions('sgdm', ...
-%                 'ValidationFrequency', 1e6, ... 
-%                 'MiniBatchSize',16, ...
-%                 'L2Regularization',0.001);
+            % options = trainingOptions('sgdm', ...
+            % 'ValidationFrequency', 1e6, ...
+            % 'MiniBatchSize',16, ...
+            % 'L2Regularization',0.001);
             [feat, tar] = generate_data(obj,1e6);
             obj.nets{netIndex} = train(obj.nets{netIndex},feat,tar);
         end
@@ -82,20 +84,69 @@ classdef top_and_geo < handle
             obj.train(2);
         end
         
+        function pick_good_two(obj)
+            it = 1;
+            lossThr = 0;
+            while ~lossThr
+                net = init(obj.nets{1});
+%                 net.IW{1} = (obj.nets{index1}.IW{1}+obj.nets{index2}.IW{1})/2;
+%                 net.LW{2,1} = (obj.nets{index1}.LW{2,1} ...
+%                     +obj.nets{index2}.LW{2,1})/2;
+%                 net.b{1} = (obj.nets{index1}.b{1}+obj.nets{index2}.b{1})/2;
+%                 net.b{2} = (obj.nets{index1}.b{2}+obj.nets{index2}.b{2})/2;
+                obj.nets{1} = net;
+                obj.train(1)
+                loss = obj.e_loss(1);
+                lossThr = loss <= obj.thr;
+                it = it+1;
+                if it > 1e3
+                    break
+                end
+                
+            end
+            
+            it = 1;
+            lossThr = 0;
+            while ~lossThr
+                net = init(obj.nets{2});
+%                 net.IW{1} = (obj.nets{index1}.IW{1}+obj.nets{index2}.IW{1})/2;
+%                 net.LW{2,1} = (obj.nets{index1}.LW{2,1} ...
+%                     +obj.nets{index2}.LW{2,1})/2;
+%                 net.b{1} = (obj.nets{index1}.b{1}+obj.nets{index2}.b{1})/2;
+%                 net.b{2} = (obj.nets{index1}.b{2}+obj.nets{index2}.b{2})/2;
+                obj.nets{2} = net;
+                obj.train(2)
+                loss = obj.e_loss(2);
+                lossThr = loss <= obj.thr;
+                it = it+1;
+                if it > 1e3
+                    break
+                end
+                
+            end
+            
+        end
+        
         function train_mid_net(obj,index1,index2)
-                % initialize
-                newIndex = length(obj.nets)+1;
-                % inRange = 0;
-                isCloser = 0;
-                lossThr = 0;
-                it = 1;
+            % initialize
+            newIndex = length(obj.nets)+1;
+            % inRange = 0;
+            isCloser = 0;
+            lossThr = 0;
+            it = 1;
             while (~isCloser||~lossThr)&&it<=1000
                 net = init(obj.nets{index1});
-                net.IW{1} = (obj.nets{index1}.IW{1}+obj.nets{index2}.IW{1})/2;
-                net.LW{2,1} = (obj.nets{index1}.LW{2,1}...
-                    +obj.nets{index2}.LW{2,1})/2;
-                net.b{1} = (obj.nets{index1}.b{1}+obj.nets{index2}.b{1})/2;
-                net.b{2} = (obj.nets{index1}.b{2}+obj.nets{index2}.b{2})/2;
+                net.IW{1} = ...
+                    (obj.nets{index1}.IW{1}-obj.nets{index2}.IW{1}) ...
+                    .*[rand; rand]+obj.nets{index2}.IW{1};
+                net.LW{2,1} = (obj.nets{index1}.LW{2,1} ...
+                    -obj.nets{index2}.LW{2,1}).*[rand rand] ...
+                    +obj.nets{index2}.LW{2,1};
+                net.b{1} = ...
+                    (obj.nets{index1}.b{1}-obj.nets{index2}.b{1}) ...
+                    .*[rand; rand]+obj.nets{index2}.b{1};
+                net.b{2} = (obj.nets{index1}.b{2} ...
+                    -obj.nets{index2}.b{2})*rand+obj.nets{index2}.b{2};
                 obj.nets{newIndex} = net;
                 obj.train(newIndex)
                 % inRange and isCloser are two different conditions
@@ -164,7 +215,7 @@ classdef top_and_geo < handle
             end
             
         end
-            
+        
     end
     
     methods (Static)

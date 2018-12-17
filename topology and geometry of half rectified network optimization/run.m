@@ -1,5 +1,5 @@
 A = top_and_geo;
-A.pick_two()
+A.pick_good_two()
 A.train_mid_net(1,2)
 A.train_mid_net(1,3)
 A.train_mid_net(3,2)
@@ -27,32 +27,25 @@ end
 [U,S,V] = svd(paramMat);
 % reduce dimension to 2
 % plot loss surface
-eLoss = zeros(100);
+res = 20;
+eLoss = zeros(20);
 coor = S*V';
 redCoor = coor(1:2,:);
 firstCoorRan = [min(redCoor(1,:));max(redCoor(1,:))];
-diff1 = (firstCoorRan(2)-firstCoorRan(1))/99;
+diff1 = (firstCoorRan(2)-firstCoorRan(1))/(res-1);
 secondCoorRan = [min(redCoor(2,:));max(redCoor(2,:))];
-diff2 = (secondCoorRan(2)-secondCoorRan(1))/99;
+diff2 = (secondCoorRan(2)-secondCoorRan(1))/(res-1);
 coor1 = firstCoorRan(1):diff1:firstCoorRan(2);
 coor2 = secondCoorRan(1):diff2:secondCoorRan(2);
 dummyNetIndex = length(A.nets)+1;
-for i = 1:100
-    for j = 1:100
+for i = 1:res
+    for j = 1:res
         myCoor1 = coor1(i);
         myCoor2 = coor2(j);
         netParam = U(:,1:2)*[myCoor1; myCoor2];
         net = feedforwardnet(A.netSize(2:end-1));
         net.inputs{1}.size = 1;
         net.layers{end}.size = 1;
-        % threshold for which network satisfies e_loss < thr
-        net.trainParam.goal = A.thr;
-        % show/not show training window
-        net.trainParam.showWindow = false;
-        % regularization sets the performance as the weighted average
-        % of mean squared error and L2 norm of weigths and biases
-        % perf = regParam*L2+(1-regParam)*mse
-        net.performParam.regularization = 0.05;
         net.IW{1} = netParam(1:2);
         net.LW{2,1} = netParam(3:4)';
         net.b{1} = netParam(5:6);
